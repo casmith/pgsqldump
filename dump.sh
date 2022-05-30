@@ -27,9 +27,7 @@ fi
 		echo "Missing DB_NAME env variable"
 		exit 1
 	fi
-  echo "$DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" > ~/.pgpass
-  chmod 600 ~/.pgpass
-	pg_dump --username="${DB_USER}" --password="${DB_PASS}" --host="${DB_HOST}" "$@" "${DB_NAME}" | gzip -c | cat > /pgsqldump/"${DB_NAME}"_${TS}.sql.gz
+	PGPASSWORD="$DB_PASS" pg_dump --username=$DB_USER --dbname=$DB_NAME --host=$DB_HOST "$@" | gzip -c | cat > /pgsqldump/"${DB_NAME}"_${TS}.sql.gz
 #else
 #	databases=`mysql --user="${DB_USER}" --password="${DB_PASS}" --host="${DB_HOST}" -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
 #for db in $databases; do
