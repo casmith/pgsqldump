@@ -19,6 +19,4 @@ if [[ ${DB_HOST} == "" ]]; then
 	exit 1
 fi
 
-psql --user="${DB_USER}" --password="${DB_PASS}" --host="${DB_HOST}" "$@" "${DB_NAME}" > /mysqldump/"${DB_NAME}".sql
-
-PGPASSWORD="$DB_PASS" psql --verbose --username=$DB_USER --host=$DB_HOST "${DB_NAME}" < $FILE
+PGPASSWORD="$DB_PASS" psql --username=$DB_USER --host=$DB_HOST "${DB_NAME}" < $FILE
