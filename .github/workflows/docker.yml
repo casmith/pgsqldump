@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v22
+      uses: docker/setup-buildx-action@v2
 
     - name: Set up QEMU
       id: qemu
@@ -37,3 +37,12 @@ jobs:
         push: true
         tags: casmith/pgsqldump:latest
         platforms: linux/amd64,linux/arm64
+
+    - name: Build and push restore
+      id: docker_build_restore
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        tags: casmith/pgsqlrestore:latest
+        platforms: linux/amd64,linux/arm64
+        file: Dockerfile.restore
