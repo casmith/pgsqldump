@@ -1,4 +1,4 @@
 FROM alpine
 RUN apk add --update postgresql-client bash openssh-client && rm -rf /var/cache/apk/*
-COPY dump.sh /
+COPY restore.sh /
 ENTRYPOINT ["/restore.sh"]
