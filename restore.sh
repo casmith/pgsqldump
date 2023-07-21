@@ -19,4 +19,6 @@ if [[ ${DB_HOST} == "" ]]; then
 	exit 1
 fi
 
+echo "Restoring database ${DB_NAME}"
+echo "PGPASSWORD=$DB_PASS psql --username=$DB_USER --host=$DB_HOST ${DB_NAME} < $FILE"
 PGPASSWORD="$DB_PASS" psql --username=$DB_USER --host=$DB_HOST "${DB_NAME}" < $FILE
