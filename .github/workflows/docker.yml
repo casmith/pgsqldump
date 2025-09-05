@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -30,12 +32,16 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Get next version
+      id: get_next_version
+      uses: thenativeweb/get-next-version@main
+
     - name: Build and push
       id: docker_build
       uses: docker/build-push-action@v4
       with:
         push: true
-        tags: casmith/pgsqldump:latest
+        tags: casmith/pgsqldump:${{ steps.get_next_version.outputs.version }},casmith/pgsqldump:latest
         platforms: linux/amd64,linux/arm64
 
     - name: Build and push restore
@@ -43,6 +49,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         push: true
-        tags: casmith/pgsqlrestore:latest
+        tags: casmith/pgsqlrestore:${{ steps.get_next_version.outputs.version }},casmith/pgsqlrestore:latest
         platforms: linux/amd64,linux/arm64
         file: Dockerfile.restore
+      
