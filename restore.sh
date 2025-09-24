@@ -23,4 +23,4 @@ if [[ ! $FLAGS == "" ]]; then
   FLAGS=" $FLAGS"
 fi
 
-PGPASSWORD="$DB_PASS" psql$FLAGS --username=$DB_USER --host=$DB_HOST "${DB_NAME}" <$FILE
+PGPASSWORD="$DB_PASS" pg_restore$FLAGS --username=$DB_USER --host=$DB_HOST --dbname="${DB_NAME}" --file=$FILE
