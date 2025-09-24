@@ -4,30 +4,34 @@ DB_USER=${DB_USER:-${PGSQL_ENV_DB_USER}}
 DB_PASS=${DB_PASS:-${PGSQL_ENV_DB_PASS}}
 DB_NAME=${DB_NAME:-${PGSQL_ENV_DB_NAME}}
 DB_HOST=${DB_HOST:-${PGSQL_ENV_DB_HOST}}
+FLAGS=${FLAGS}
 ALL_DATABASES=${ALL_DATABASES}
 IGNORE_DATABASE=${IGNORE_DATABASE}
 TS=$(date +%Y%m%dT%H%M%S)
 
-
 if [[ ${DB_USER} == "" ]]; then
-	echo "Missing DB_USER env variable"
-	exit 1
+  echo "Missing DB_USER env variable"
+  exit 1
 fi
 if [[ ${DB_PASS} == "" ]]; then
-	echo "Missing DB_PASS env variable"
-	exit 1
+  echo "Missing DB_PASS env variable"
+  exit 1
 fi
 if [[ ${DB_HOST} == "" ]]; then
-	echo "Missing DB_HOST env variable"
-	exit 1
+  echo "Missing DB_HOST env variable"
+  exit 1
+fi
+
+if [[ ! $FLAGS == "" ]]; then
+  FLAGS=" $FLAGS"
 fi
 
 #if [[ ${ALL_DATABASES} == "" ]]; then
-	if [[ ${DB_NAME} == "" ]]; then
-		echo "Missing DB_NAME env variable"
-		exit 1
-	fi
-	PGPASSWORD="$DB_PASS" pg_dump --username=$DB_USER --dbname=$DB_NAME --host=$DB_HOST "$@" | gzip -c | cat > /pgsqldump/"${DB_NAME}"_${TS}.sql.gz
+if [[ ${DB_NAME} == "" ]]; then
+  echo "Missing DB_NAME env variable"
+  exit 1
+fi
+PGPASSWORD="$DB_PASS" pg_dump$FLAGS --username=$DB_USER --dbname=$DB_NAME --host=$DB_HOST "$@" | gzip -c | cat >/pgsqldump/"${DB_NAME}"_${TS}.sql.gz
 #else
 #	databases=`mysql --user="${DB_USER}" --password="${DB_PASS}" --host="${DB_HOST}" -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
 #for db in $databases; do
