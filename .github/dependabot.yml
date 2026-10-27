@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Alpine base image. Conventional "fix" prefix so get-next-version cuts a
+  # patch release and the rebuilt image actually gets published.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+      include: scope
