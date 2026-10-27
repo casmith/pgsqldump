@@ -6,52 +6,75 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    permissions:
+      # Push the release tag back so the next run counts from it.
+      contents: write
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
 
     - name: Set up QEMU
-      id: qemu
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       with:
-        image: tonistiigi/binfmt:latest
         platforms: amd64,arm64
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+    - name: Get next version
+      id: version
+      uses: thenativeweb/get-next-version@d5e0026f4595af03fe9d57acb3e589c9d42b081b # 2.8.3
+      with:
+        prefix: 'v'
+
+    # Publish only from main, and only when the commits since the last tag
+    # warrant a new version. Without the hasNextVersion check a non-releasing
+    # commit (ci:, docs:, ...) recomputes the latest version and overwrites an
+    # image that is already deployed.
+    - name: Decide whether to publish
+      id: publish
+      run: |
+        if [[ "${{ github.event_name }}" == "push" && "${{ steps.version.outputs.hasNextVersion }}" == "true" ]]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+        fi
+        echo "next version: ${{ steps.version.outputs.version }} (hasNextVersion=${{ steps.version.outputs.hasNextVersion }}, event=${{ github.event_name }})"
+
     - name: Login to DockerHub
-      uses: docker/login-action@v2
+      if: steps.publish.outputs.enabled == 'true'
+      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Get next version
-      id: get_next_version
-      uses: thenativeweb/get-next-version@main
+    - name: Build and push dump
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
       with:
-        prefix: 'v'
-
-    - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        tags: casmith/pgsqldump:${{ steps.get_next_version.outputs.version }},casmith/pgsqldump:latest
+        push: ${{ steps.publish.outputs.enabled == 'true' }}
+        tags: casmith/pgsqldump:${{ steps.version.outputs.version }},casmith/pgsqldump:latest
         platforms: linux/amd64,linux/arm64
 
     - name: Build and push restore
-      id: docker_build_restore
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
       with:
-        push: true
-        tags: casmith/pgsqlrestore:${{ steps.get_next_version.outputs.version }},casmith/pgsqlrestore:latest
+        push: ${{ steps.publish.outputs.enabled == 'true' }}
+        tags: casmith/pgsqlrestore:${{ steps.version.outputs.version }},casmith/pgsqlrestore:latest
         platforms: linux/amd64,linux/arm64
         file: Dockerfile.restore
-      
+
+    - name: Tag release
+      if: steps.publish.outputs.enabled == 'true'
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        git tag "$VERSION"
+        git push origin "$VERSION"
