@@ -14,7 +14,8 @@ A docker image for backing up remote postgres databases. Handy for kubernetes.
 
 ## PostgreSQL version
 `pg_dump` cannot dump a server newer than itself. The client major is pinned
-with the `PG_MAJOR` build arg (17); raise it before upgrading servers past it.
+with the `PG_MAJOR` build arg (18); raise it before upgrading servers past it.
+A newer client still dumps and restores older servers.
 
 ## Releases
 Versions come from conventional commits (`feat:` → minor, `fix:` → patch) and
